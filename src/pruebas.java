@@ -1,9 +1,11 @@
 import java.util.*;
 public class pruebas {
     public static void main(String[] args) {
-        for(int i = 5; i <= 10; i++) {
+        for(int i = 5; i <= 10; i++) { // i = tamaño
             int n = (int) Math.pow(2, i);
-            int k = 2; // Ejemplo: buscamos pares con diferencia de 2
+            // Calcular los límites máximos según la fórmula del PDF
+            int maxK = (int) Math.pow(2, i - 2);     // Límite para k
+            int maxValor = (int) Math.pow(2, i + 2); // Límite para los valores
             StdRandom.setSeed(777666);
 
             String Archivo = "archivo_" + n + ".csv";
@@ -13,34 +15,45 @@ public class pruebas {
             salidaCsv.println("Iteracion,Tiempo_Metodo1,Tiempo_Metodo2,Tiempo_Metodo3");
 
             for (int j = 0; j < 100; j++) {
-                // 1. Generar datos aleatorios para la prueba
-                List<Integer> lista = new ArrayList<>();
-                for(int m = 0; m < n; m++) {
-                    lista.add(StdRandom.uniformInt(1000000));
+
+                // genera k aleatorio en el rango [1, 2^(t-2)]
+                int k = StdRandom.uniformInt(1, maxK + 1);
+
+                // genera n valores unicos en el rango [0, 2^(t+2)]
+                // Usamos HashSet porque funciona como un "guardia" que rechaza números repetidos
+                Set<Integer> numerosUnicos = new HashSet<>();
+                while (numerosUnicos.size() < n) {
+                    numerosUnicos.add(StdRandom.uniformInt(0, maxValor + 1));
                 }
 
-                // 2. Medir Método 1 (cuentaPares)
+                // pasamos los números unicos a una lista y los desordenamos
+                List<Integer> lista = new ArrayList<>(numerosUnicos);
+                Collections.shuffle(lista);
+
+                // Medir metodo 1
                 StopwatchCPU timer1 = new StopwatchCPU();
-                for(int p =0 ; p<1000;p++)
-                {
-                Result.cuentaPares(n, new ArrayList<>(lista), k);
+                for(int p = 0; p < 1000; p++) {
+                    // pasamos una copia de la lista (new ArrayList) porque Result.java la ordena (asi en cada metodo)
+                    Result.cuentaPares(n, new ArrayList<>(lista), k);
                 }
                 double t1 = timer1.elapsedTime();
 
-                // 3. Medir Método 2 (cuentaPares2)
+                // Medir metodo 2
                 StopwatchCPU timer2 = new StopwatchCPU();
-                for(int p =0 ; p<1000;p++){
-                Result.cuentaPares2(n, new ArrayList<>(lista), k);}
+                for(int p = 0; p < 1000; p++){
+                    Result.cuentaPares2(n, new ArrayList<>(lista), k);
+                }
                 double t2 = timer2.elapsedTime();
 
-                // 4. Medir Método 3 (cuentaPares3)
+                // Medir metodo 3
                 StopwatchCPU timer3 = new StopwatchCPU();
-                for(int p =0 ; p<1000;p++){
-                Result.cuentaPares3(n, new ArrayList<>(lista), k);}
+                for(int p = 0; p < 1000; p++){
+                    Result.cuentaPares3(n, new ArrayList<>(lista), k);
+                }
                 double t3 = timer3.elapsedTime();
 
-                // Guardar resultados en el CSV
-                salidaCsv.printf("%d, %.10f, %.10f, %.10f\n", j, t1, t2, t3);
+                // Guardar resultados en el CSV (guardando hasta 6 decimales)
+                salidaCsv.printf("%d, %.6f, %.6f, %.6f\n", j, t1, t2, t3);
             }
             salidaCsv.close();
         }
